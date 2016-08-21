@@ -1,16 +1,12 @@
-#include <string>
-#include "ProcessingModule.h"
+#pragma once
 
-using std::string;
+#include "Processor.h"
 
-class ExampleProcessor : public ProcessingModule {
+class ExampleProcessor : public Processor {
  public:
     ExampleProcessor() = default;
     virtual ~ExampleProcessor() = default;
-    bool process(int value);
- private:
-    void doStuff();
-    int aValue;
+    bool process(uint8_t * data, uint32_t length); 
 };
 
 

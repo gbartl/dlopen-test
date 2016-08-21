@@ -1,43 +1,44 @@
 #include <iostream>
-#include <dlfcn.h>
-#include "ProcessingModule.h"
+#include <vector>
 
-using namespace std;
+#include <dlfcn.h>
+
+#include "Processor.h"
+#include "ProcessorLoader.h"
+
+using std::vector;
+using std::cout;
+using std::endl;
 
 int main(int argc, char * argv[]) {
-    void * lib = dlopen(argv[1], RTLD_LAZY);
-    if (lib == nullptr) {
-        cout<<"error opening: "<<argv[1]<<endl;
-        return 1;
-    } else {
-        cout<<"successfully opened: "<<argv[1]<<endl;
+    int retVal = 1;
+    ProcessorLoader processorLoader;
+
+    bool processorsOK = true;
+    for (int i=1; i<argc; ++i) {
+        bool processorLoaded = processorLoader.openLib(argv[i]);
+        if (processorLoaded == false) {
+            processorsOK = false;
+        }
     }
 
-    dlerror();
+    if (processorsOK == true) {
+        vector<Processor*> processors = processorLoader.createProcessingChainInstance();
+        uint8_t data[]= {0,1,2,3,4};
+        for (int i=0; i<sizeof(data); ++i) {
+            cout<<(int)data[i]<<" ";
+        }
+        cout<<endl;
+        for(auto processor : processors) {
+            processor->process(data, sizeof(data));
+        }
 
-    const char * dlsym_error;
-
-    create_t* createProcessor = (create_t*) dlsym(lib, "create");
-    dlsym_error = dlerror();
-    if (dlsym_error) {
-        cout << "Cannot load symbol create: " << dlsym_error << endl;
-        return 1;
-    } else {
-        cout << "got creator" << endl;
+        for (int i=0; i<sizeof(data); ++i) {
+            cout<<(int)data[i]<<" ";
+        }
+        cout<<endl;
+        retVal = 0;
     }
 
-    destroy_t* destroyProcessor = (destroy_t*) dlsym(lib, "destroy");
-    dlsym_error = dlerror();
-    if (dlsym_error) {
-        cout << "Cannot load symbol destory: " << dlsym_error << endl;
-        return 1;
-    } else {
-        cout << "got destroyer" << endl;
-    }
-
-    ProcessingModule * aProcessor = createProcessor();
-    bool retVal = aProcessor->process(12);
-    if (retVal == true) {
-        cout<<"great success"<<endl;
-    }
-}
+    return retVal;
+};
