@@ -1,0 +1,8 @@
+FROM centos
+
+MAINTAINER george
+
+RUN yum install -y epel-release
+RUN yum install -y gcc-c++ make cmake fabric
+
+CMD echo "Done!"
